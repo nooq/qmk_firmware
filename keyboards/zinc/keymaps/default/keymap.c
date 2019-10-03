@@ -265,7 +265,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         // 他のキーが押されていない場合
         //if (raise_pressed) {
           if(keymap_config.swap_lalt_lgui==false){
-            register_code(KC_LANG1); // for macOS
+            register_code(KC_LANG1);
             unregister_code(KC_LANG1);
           }else{
             register_code(KC_HENK);
@@ -299,33 +299,49 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     case EISU:
       if (record->event.pressed) {
+        //Windowsでは KC_MHEN,KC_HENK を認識できないため、AHKで扱う
+        /*
         if(keymap_config.swap_lalt_lgui==false){
           register_code(KC_LANG2);
         }else{
           register_code(KC_MHEN);
         }
+        */
+        register_code(KC_LANG2);
       } else {
+        //Windowsでは KC_MHEN,KC_HENK を認識できないため、AHKで扱う
+        /*
         if(keymap_config.swap_lalt_lgui==false){
           unregister_code(KC_LANG2);
         }else{
           unregister_code(KC_MHEN);
         }
+        */
+        unregister_code(KC_LANG2);
       }
       return false;
       break;
     case KANA:
       if (record->event.pressed) {
+        //Windowsでは KC_MHEN,KC_HENK を認識できないため、AHKで扱う
+        /*
         if(keymap_config.swap_lalt_lgui==false){
           register_code(KC_LANG1);
         }else{
           register_code(KC_HENK);
         }
+        */
+        register_code(KC_LANG1);
       } else {
+        //Windowsでは KC_MHEN,KC_HENK を認識できないため、AHKで扱う
+        /*
         if(keymap_config.swap_lalt_lgui==false){
           unregister_code(KC_LANG1);
         }else{
           unregister_code(KC_HENK);
         }
+        */
+        unregister_code(KC_LANG1);
       }
       return false;
       break;

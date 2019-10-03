@@ -224,13 +224,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if (lower_pressed && (TIMER_DIFF_16(record->event.time, lower_pressed_time) < TAPPING_TERM)) {
         // 他のキーが押されていない場合
         //if (lower_pressed) {
+
+          //Windowsでは KC_MHEN,KC_HENK を認識できないため、AHKで扱う
+          /*
           if(keymap_config.swap_lalt_lgui==false){
-            register_code(KC_LANG2); // for macOS
+            register_code(KC_LANG2);
             unregister_code(KC_LANG2);
           }else{
             register_code(KC_MHEN);
             unregister_code(KC_MHEN);
           }
+          */
+          register_code(KC_LANG2);
+          unregister_code(KC_LANG2);
         }
         lower_pressed = false;
       }
@@ -264,6 +270,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if (raise_pressed && (TIMER_DIFF_16(record->event.time, raise_pressed_time) < TAPPING_TERM)) {
         // 他のキーが押されていない場合
         //if (raise_pressed) {
+
+          //Windowsでは KC_MHEN,KC_HENK を認識できないため、AHKで扱う
+          /*
           if(keymap_config.swap_lalt_lgui==false){
             register_code(KC_LANG1);
             unregister_code(KC_LANG1);
@@ -271,6 +280,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             register_code(KC_HENK);
             unregister_code(KC_HENK);
           }
+          */
+          register_code(KC_LANG1);
+          unregister_code(KC_LANG1);
         }
         raise_pressed = false;
       }

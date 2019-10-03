@@ -52,14 +52,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = { \
    * |------+------+------+------+------+------|             |------+------+------+------+------+------|
    * | Shift|   Z  |   X  |   C  |   V  |   B  |             |   N  |   M  |   ,  |   .  |   /  | '    |
    * |------+------+------+------+------+------|             |------+------+------+------+------+------|
-   * |ADJUST| Esc  | Alt  | Win  |LOWER |Space |             | Space| RAISE| Left | Down |  Up  | Right|
+   * | Esc  |ADJUST| Alt  | Win  |LOWER |Space |             | Space| RAISE| Left | Down |  Up  | Right|
+   * |      |      |      |      |(EISU)|      |             |      |(KANA)|      |      |      |      |
    * `-----------------------------------------'             `-----------------------------------------'
    */
 [_QWERTY] = LAYOUT_ortho_4x12(
       KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                      KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_BSPC, \
       KC_LCTL, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,                      KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_ENT, \
       KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                      KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_QUOT , \
-      ADJUST,  KC_ESC,  KC_LGUI, KC_LALT, LOWER,   KC_SPC,                    KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT \
+      KC_ESC,  ADJUST,  KC_LALT, KC_LGUI, LOWER,   KC_SPC,                    KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT \
       ),
 
   /* Colemak
@@ -71,6 +72,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = { \
    * | Shift|   Z  |   X  |   C  |   V  |   B  |             |   K  |   M  |   ,  |   .  |   /  |Enter |
    * |------+------+------+------+------+------|             |------+------+------+------+------+------|
    * | Esc  |ADJUST| Alt  | Win  |LOWER |Space |             | Space| RAISE| Left | Down |  Up  | Right|
+   * |      |      |      |      |(EISU)|      |             |      |(KANA)|      |      |      |      |
    * `-----------------------------------------'             `-----------------------------------------'
    */
   [_COLEMAK] = LAYOUT_ortho_4x12( \
@@ -89,6 +91,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = { \
    * | Shift|   ;  |   Q  |   J  |   K  |   X  |             |   B  |   M  |   W  |   V  |   Z  |Enter |
    * |------+------+------+------+------+------|             |------+------+------+------+------+------|
    * | Esc  |ADJUST| Alt  | Win  |LOWER |Space |             | Space| RAISE| Left | Down |  Up  | Right|
+   * |      |      |      |      |(EISU)|      |             |      |(KANA)|      |      |      |      |
    * `-----------------------------------------'             `-----------------------------------------'
    */
   [_DVORAK] = LAYOUT_ortho_4x12( \
@@ -147,14 +150,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = { \
    */
     [_ADJUST] =  LAYOUT_ortho_4x12( \
       _______, RESET,   RGBRST,  _______, _______, _______,                   _______, QWERTY,  COLEMAK, DVORAK,  _______, KC_INS, \
-      _______, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, _______,                   _______, KC_MINS, KC_EQL,  KC_PSCR, KC_SLCK, KC_PAUS,\
+      _______, RGB_TOG, RGB_HUI, RGB_SAI, RGB_VAI, AG_NORM,                   AG_SWAP, KC_MINS, KC_EQL,  KC_PSCR, KC_SLCK, KC_PAUS,\
       _______, RGB_MOD, RGB_HUD, RGB_SAD, RGB_VAD, _______,                   _______, _______, _______, _______, _______, _______,\
       _______, _______, _______, EISU,    EISU,    EISU,                      KANA,    KANA,    KC_HOME, KC_PGDN, KC_PGUP, KC_END\
       )
 };
 
+static bool lower_pressed = false;
+static uint16_t lower_pressed_time = 0;
+static bool raise_pressed = false;
+static uint16_t raise_pressed_time = 0;
+
 // define variables for reactive RGB
-bool TOG_STATUS = false;  
+bool TOG_STATUS = false;
 
 // Setting ADJUST layer RGB back to default
 void update_tri_layer_RGB(uint8_t layer1, uint8_t layer2, uint8_t layer3) {
@@ -191,8 +199,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     case LOWER:
       if (record->event.pressed) {
-          //not sure how to have keyboard check mode and set it to a variable, so my work around
-          //uses another variable that would be set to true after the first time a reactive key is pressed.
+        lower_pressed = true;
+        lower_pressed_time = record->event.time;
+        //not sure how to have keyboard check mode and set it to a variable, so my work around
+        //uses another variable that would be set to true after the first time a reactive key is pressed.
         if (TOG_STATUS) { //TOG_STATUS checks is another reactive key currently pressed, only changes RGB mode if returns false
         } else {
           TOG_STATUS = !TOG_STATUS;
@@ -209,12 +219,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         TOG_STATUS = false;
         layer_off(_LOWER);
         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+        // http://okapies.hateblo.jp/entry/2019/02/02/133953
+        // 他のキーが押されていなく、押してから離すまでの時間が TAPPING_TERM 以下である
+        if (lower_pressed && (TIMER_DIFF_16(record->event.time, lower_pressed_time) < TAPPING_TERM)) {
+        // 他のキーが押されていない場合
+        //if (lower_pressed) {
+          if(keymap_config.swap_lalt_lgui==false){
+            register_code(KC_LANG2); // for macOS
+            unregister_code(KC_LANG2);
+          }else{
+            register_code(KC_MHEN);
+            unregister_code(KC_MHEN);
+          }
+        }
+        lower_pressed = false;
       }
       return false;
       break;
-  
+
     case RAISE:
       if (record->event.pressed) {
+        raise_pressed = true;
+        raise_pressed_time = record->event.time;
         //not sure how to have keyboard check mode and set it to a variable, so my work around
         //uses another variable that would be set to true after the first time a reactive key is pressed.
         if (TOG_STATUS) { //TOG_STATUS checks is another reactive key currently pressed, only changes RGB mode if returns false
@@ -233,6 +259,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         layer_off(_RAISE);
         TOG_STATUS = false;
         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
+        // http://okapies.hateblo.jp/entry/2019/02/02/133953
+        // 他のキーが押されていなく、押してから離すまでの時間が TAPPING_TERM 以下である
+        if (raise_pressed && (TIMER_DIFF_16(record->event.time, raise_pressed_time) < TAPPING_TERM)) {
+        // 他のキーが押されていない場合
+        //if (raise_pressed) {
+          if(keymap_config.swap_lalt_lgui==false){
+            register_code(KC_LANG1); // for macOS
+            unregister_code(KC_LANG1);
+          }else{
+            register_code(KC_HENK);
+            unregister_code(KC_HENK);
+          }
+        }
+        raise_pressed = false;
       }
       return false;
       break;
@@ -262,10 +302,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if(keymap_config.swap_lalt_lgui==false){
           register_code(KC_LANG2);
         }else{
-          SEND_STRING(SS_LALT("`"));
+          register_code(KC_MHEN);
         }
       } else {
-        unregister_code(KC_LANG2);
+        if(keymap_config.swap_lalt_lgui==false){
+          unregister_code(KC_LANG2);
+        }else{
+          unregister_code(KC_MHEN);
+        }
       }
       return false;
       break;
@@ -274,10 +318,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if(keymap_config.swap_lalt_lgui==false){
           register_code(KC_LANG1);
         }else{
-         SEND_STRING(SS_LALT("`"));
+          register_code(KC_HENK);
         }
       } else {
-        unregister_code(KC_LANG1);
+        if(keymap_config.swap_lalt_lgui==false){
+          unregister_code(KC_LANG1);
+        }else{
+          unregister_code(KC_HENK);
+        }
       }
       return false;
       break;
@@ -290,6 +338,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           RGB_current_config = rgblight_config;
         }
       #endif
+      break;
+    default:
+      if (record->event.pressed) {
+        // reset the flags
+        lower_pressed = false;
+        raise_pressed = false;
+      }
       break;
   }
   return true;

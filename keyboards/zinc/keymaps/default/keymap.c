@@ -266,8 +266,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         TOG_STATUS = false;
         update_tri_layer_RGB(_LOWER, _RAISE, _ADJUST);
         // http://okapies.hateblo.jp/entry/2019/02/02/133953
-        // 他のキーが押されていなく、押してから離すまでの時間が TAPPING_TERM 以下である
-        if (raise_pressed && (TIMER_DIFF_16(record->event.time, raise_pressed_time) < TAPPING_TERM)) {
+        // 他のキーが押されていなく、押してから離すまでの時間が 400ms 以下である
+        if (raise_pressed && (TIMER_DIFF_16(record->event.time, raise_pressed_time) < 400)) {
         // 他のキーが押されていない場合
         //if (raise_pressed) {
 
